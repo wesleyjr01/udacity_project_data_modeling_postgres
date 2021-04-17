@@ -14,10 +14,10 @@ CREATE TABLE IF NOT EXISTS songplays \
     start_time TIMESTAMP, \
     user_id INT NOT NULL, \
     level VARCHAR, \
-    song_id VARCHAR NOT NULL,
-    artist_id VARCHAR NOT NULL,
-    session_id INT NOT NULL,
-    location INT,
+    song_id VARCHAR,
+    artist_id VARCHAR,
+    session_id INT,
+    location VARCHAR,
     user_agent VARCHAR,
     FOREIGN KEY (user_id)
         REFERENCES users (user_id)
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS songs \
     title VARCHAR, \
     artist_id VARCHAR NOT NULL, \
     year INT, \
-    duration FLOAT, \
+    duration int, \
     FOREIGN KEY (artist_id)
         REFERENCES artists (artist_id)
         ON UPDATE CASCADE ON DELETE CASCADE);
@@ -75,8 +75,8 @@ CREATE TABLE IF NOT EXISTS time \
 
 songplay_table_insert = """
 INSERT INTO songplays \
-    (songplay_id, start_time, user_id, level, song_id, artist_id, session_id, location, user_agent) \
-    VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    (start_time, user_id, level, song_id, artist_id, session_id, location, user_agent) \
+    VALUES(%s, %s, %s, %s, %s, %s, %s, %s)
 """
 
 user_table_insert = """
@@ -107,6 +107,11 @@ INSERT INTO time \
 # FIND SONGS
 
 song_select = """
+SELECT songs.song_id, artists.artist_id FROM songs \
+    JOIN artists ON artists.artist_id = songs.artist_id \
+    WHERE songs.title LIKE %s \
+    AND artists.name LIKE %s \
+    AND songs.duration = %s;
 """
 
 # QUERY LISTS
