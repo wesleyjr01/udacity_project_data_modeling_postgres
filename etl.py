@@ -1,5 +1,7 @@
 import psycopg2
 import pandas as pd
+
+import create_tables
 from sql_queries import (
     songplay_table_insert,
     user_table_insert,
@@ -184,6 +186,9 @@ def process_data(cursor, connection, filepath, func):
 
 
 def main():
+    # drop sparkifydb database if exists, then re-create it.
+    create_tables.main()
+
     connection = psycopg2.connect(
         "host=127.0.0.1 dbname=sparkifydb user=student password=student"
     )
