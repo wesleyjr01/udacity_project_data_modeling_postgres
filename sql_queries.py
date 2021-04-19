@@ -83,7 +83,9 @@ user_table_insert = """
 INSERT INTO users \
     (user_id, first_name, last_name, gender, level) \
     VALUES(%s, %s, %s, %s, %s)
-    ON CONFLICT (user_id) DO NOTHING
+    ON CONFLICT (user_id) DO UPDATE SET \
+    (first_name, last_name, gender, level) = \
+        (EXCLUDED.first_name, EXCLUDED.last_name, EXCLUDED.gender, EXCLUDED.level)
 """
 
 song_table_insert = """
@@ -109,13 +111,6 @@ INSERT INTO time \
 """
 
 # FIND SONGS
-
-# song_select = """
-# SELECT songs.song_id, artists.artist_id FROM songs \
-#     JOIN artists ON artists.artist_id = songs.artist_id \
-#     WHERE songs.title LIKE %s \
-#     AND artists.name LIKE %s;
-# """
 
 song_select = """
 SELECT songs.song_id, artists.artist_id FROM songs \
