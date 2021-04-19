@@ -13,7 +13,7 @@ from sql_queries import (
 from utils import build_df_from_single_filepath, get_files
 
 
-def process_artist_data(cursor, df):
+def process_artist_data(cur, df):
     """Filter a subset of df in order to match
     the artists schema, then insert the filtered rows
     into artists table."""
@@ -30,10 +30,10 @@ def process_artist_data(cursor, df):
     ].dropna(axis=0, subset=["artist_id"])
     if len(artist_data) > 0:
         for _, row in artist_data.iterrows():
-            cursor.execute(artist_table_insert, row)
+            cur.execute(artist_table_insert, row)
 
 
-def process_song_data(cursor, df):
+def process_song_data(cur, df):
     """Filter a subset of df in order to match
     the songs schema, then insert the filtered rows
     into songs table."""
@@ -43,10 +43,10 @@ def process_song_data(cursor, df):
     )
     if len(song_data) > 0:
         for _, row in song_data.iterrows():
-            cursor.execute(song_table_insert, row)
+            cur.execute(song_table_insert, row)
 
 
-def process_time_data(cursor, df):
+def process_time_data(cur, df):
     """Convert unix epoch into datetime, then calculate
     time parameters to match the time schema, then insert
     the data into time table."""
@@ -75,10 +75,10 @@ def process_time_data(cursor, df):
         time_df = pd.DataFrame(dict(zip(column_labels, time_data)))
 
         for _, row in time_df.iterrows():
-            cursor.execute(time_table_insert, row)
+            cur.execute(time_table_insert, row)
 
 
-def process_user_data(cursor, df):
+def process_user_data(cur, df):
     """Filter a subset of df in order to match
     the users schema, then insert the filtered rows
     into users table."""
@@ -97,10 +97,10 @@ def process_user_data(cursor, df):
     if len(user_df) > 0:
         user_df["userId"] = user_df["userId"].astype(int)
         for _, row in user_df.iterrows():
-            cursor.execute(user_table_insert, row)
+            cur.execute(user_table_insert, row)
 
 
-def process_songplay_data(cursor, df):
+def process_songplay_data(cur, df):
     """Iterate over each row of df, execute query song_select to
     retrieve songid and artistd from songs and artists tables, then
     insert a songplay_data record into songplay table."""
@@ -109,8 +109,8 @@ def process_songplay_data(cursor, df):
         for _, row in df.iterrows():
 
             # get songid and artistid from song and artist tables
-            cursor.execute(song_select, (row.song, row.artist, row.length))
-            results = cursor.fetchone()
+            cur.execute(song_select, (row.song, row.artist, row.length))
+            results = cur.fetchone()
 
             if results:
                 songid, artistid = results
@@ -129,10 +129,10 @@ def process_songplay_data(cursor, df):
                 row.location,
                 row.userAgent,
             )
-            cursor.execute(songplay_table_insert, songplay_data)
+            cur.execute(songplay_table_insert, songplay_data)
 
 
-def process_song_file(cursor, filepath):
+def process_song_file(cur, filepath):
     """Open a .json file from filepath and insert a record
     into artists and songs tables."""
 
@@ -140,13 +140,13 @@ def process_song_file(cursor, filepath):
     df = build_df_from_single_filepath(filepath=filepath)
 
     # insert artist record into artists table
-    process_artist_data(cursor=cursor, df=df)
+    process_artist_data(cur=cur, df=df)
 
     # insert song record into songs table
-    process_song_data(cursor=cursor, df=df)
+    process_song_data(cur=cur, df=df)
 
 
-def process_log_file(cursor, filepath):
+def process_log_file(cur, filepath):
     """Open a .json file from filepath and insert a record
     into time, users and songplay tables."""
 
@@ -158,18 +158,18 @@ def process_log_file(cursor, filepath):
     df.reset_index(inplace=True, drop=True)
 
     # insert time record into time table
-    process_time_data(cursor=cursor, df=df)
+    process_time_data(cur=cur, df=df)
 
     # insert user record into users table
-    process_user_data(cursor=cursor, df=df)
+    process_user_data(cur=cur, df=df)
 
     # insert songplay record into songplay table
-    process_songplay_data(cursor=cursor, df=df)
+    process_songplay_data(cur=cur, df=df)
 
 
-def process_data(cursor, connection, filepath, func):
+def process_data(cur, conn, filepath, func):
     """Retrieve all files from filepath, process thoses
-    files with func, then with connection and cursor insert
+    files with func, then with conn and cur insert
     data into the database."""
     # get all files matching extension from directory
     all_files = get_files(filepath=filepath)
@@ -180,8 +180,8 @@ def process_data(cursor, connection, filepath, func):
 
     # iterate over files and process
     for i, datafile in enumerate(all_files, 1):
-        func(cursor, datafile)
-        connection.commit()
+        func(cur, datafile)
+        conn.commit()
         print("{}/{} files processed.".format(i, num_files))
 
 
@@ -189,15 +189,15 @@ def main():
     # drop sparkifydb database if exists, then re-create it.
     create_tables.main()
 
-    connection = psycopg2.connect(
+    conn = psycopg2.connect(
         "host=127.0.0.1 dbname=sparkifydb user=student password=student"
     )
-    cursor = connection.cursor()
+    cur = conn.cursor()
 
-    process_data(cursor, connection, filepath="data/song_data", func=process_song_file)
-    process_data(cursor, connection, filepath="data/log_data", func=process_log_file)
+    process_data(cur, conn, filepath="data/song_data", func=process_song_file)
+    process_data(cur, conn, filepath="data/log_data", func=process_log_file)
 
-    connection.close()
+    conn.close()
 
 
 if __name__ == "__main__":
