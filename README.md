@@ -11,7 +11,7 @@
 
 ### Solution Description:
 
-- In order to best fit the need of the startup, 5 new tables were build with PostgresSQL with a [**Star Schema**](https://en.wikipedia.org/wiki/Star_schema), as follows the image:  
+- In order to best fit the needs of the startup, 5 new tables were build with PostgresSQL with a [**Star Schema**](https://en.wikipedia.org/wiki/Star_schema), as follows the image:  
   ![entity_diagram.jpg](entity_diagram.jpg)
 - The **songplay** is the [**Fact Table**](https://en.wikipedia.org/wiki/Fact_table#:~:text=In%20data%20warehousing%2C%20a%20fact,schema%20surrounded%20by%20dimension%20tables.) of the Star Schema, which will be used to quickly retrieve information about users activity on the app, while the [**Dimension Tables**](<https://en.wikipedia.org/wiki/Dimension_(data_warehouse)>) **users, time, songs and artists** can be used to retreive the detailed information of entities present in the **songplay** table.
 
